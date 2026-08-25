@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  thyroid-ultrasound-ti-rads-engine:
+    build: .
+    container_name: thyroid-ultrasound-ti-rads-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - AUDIT_SECRET_KEY=thyroid-ultrasound-ti-rads-engine-prod-audit-key-2026
+      - MODEL_PROVIDER=mock
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
