@@ -9,7 +9,18 @@ from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger
 
-supervisor = SystemSupervisor(model_provider="mock")
+supervisor = SystemSupervisor(model_provider="mock")\n\n\n
+def parse_boolean(value):
+    """Parse CSV booleans explicitly; bool('False') is True."""
+    if isinstance(value, bool):
+        return value
+    token = str(value).strip().lower()
+    if token in ("true", "1", "yes", "y"):
+        return True
+    if token in ("false", "0", "no", "n", ""):
+        return False
+    raise ValueError(f"Invalid boolean value: {value!r}")
+
 
 
 def main(argv=None):
@@ -34,6 +45,15 @@ def main(argv=None):
     p_batch.add_argument("-i", "--input", required=True)
     p_batch.add_argument("-o", "--output", default="results.csv")
 
+    # Clinical TI-RADS scoring (separate from legacy telemetry audit)
+    p_tirads = subparsers.add_parser("tirads", help="Score an adult thyroid nodule using ACR TI-RADS")
+    p_tirads.add_argument("--composition", choices=["cystic", "spongiform", "mixed", "solid"], required=True)
+    p_tirads.add_argument("--size-cm", type=float, required=True)
+    p_tirads.add_argument("--echogenicity", choices=["isoechoic_hyperechoic", "hypoechoic", "very_hypoechoic"])
+    p_tirads.add_argument("--shape", choices=["wider_than_tall", "taller_than_wide"])
+    p_tirads.add_argument("--margin", choices=["smooth", "ill_defined", "lobulated_irregular", "extrathyroidal_extension"])
+    p_tirads.add_argument("--focus", choices=["macrocalcifications", "rim_calcifications", "punctate_foci"], action="append", default=[])
+
     # Verify Audit
     subparsers.add_parser("verify-audit", help="Verify HMAC audit trail integrity")
 
@@ -43,6 +63,19 @@ def main(argv=None):
     p_serve.add_argument("--port", type=int, default=8000)
 
     args = parser.parse_args(argv)
+
+    if args.command == "tirads":
+        from thyroid_tirads_ai.tirads import score_tirads
+        try:
+            result = score_tirads(
+                composition=args.composition, size_cm=args.size_cm,
+                echogenicity=args.echogenicity, shape=args.shape,
+                margin=args.margin, echogenic_foci=args.focus,
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2))
+        return 0
 
     if args.command == "audit":
         payload = SystemTaskPayload(
@@ -94,7 +127,7 @@ def main(argv=None):
                 primary_metric=float(r.get("primary_metric", 15.0)),
                 secondary_metric=float(r.get("secondary_metric", 5.0)),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=parse_boolean(r.get("is_critical_flag", False)),
             )
             dossier = supervisor.process_task(payload)
             row_dict = dict(r)
