@@ -16,7 +16,7 @@ classifiers = [
     "Topic :: Security/Cryptography",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0",
     "fastapi>=0.110",
@@ -27,5 +27,12 @@ dependencies = [
 thyroid-ultrasound-ti-rads-engine = "thyroid_tirads_ai.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/thyroid-ultrasound-ti-rads-engine"
-Repository = "https://github.com/abusuraihsakhri/thyroid-ultrasound-ti-rads-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/thyroid-ultrasound-ti-rads-agent"
+Repository = "https://github.com/abusuraihsakhri/thyroid-ultrasound-ti-rads-agent"
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "httpx>=0.27,<1"]
+
+[tool.setuptools]
+packages = ["agents", "thyroid_tirads_ai"]
+py-modules = ["cli", "enrichment", "simulator", "thyroid_tirads_ai_app"]
