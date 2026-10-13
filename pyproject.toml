@@ -7,7 +7,7 @@ name = "thyroid-ultrasound-ti-rads-engine"
 version = "2.0.0"
 description = "ThyroidUltrasound Sentinel: ACR TI-RADS Multiparametric Feature Engine"
 readme = "README.md"
-authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+authors = [{ name = "Dr. Abu Suraih Sakhri" }]
 license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3",
