@@ -1,236 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thyroid Ultrasound Ti Rads Engine — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>ACR TI-RADS Nodule Calculator</title>
+  <meta name="description" content="Offline ACR TI-RADS 2017 point calculator and size-based FNA/follow-up thresholds.">
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #183045; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1060px; margin: auto; padding: 28px 20px 54px; }
+    header { margin-bottom: 24px; }
+    .eyebrow { font-size: .75rem; font-weight: 750; letter-spacing: .11em; text-transform: uppercase; color: #176a72; }
+    h1 { font-size: clamp(1.7rem, 3.3vw, 2.55rem); margin: 9px 0 7px; letter-spacing: -.04em; }
+    h2 { font-size: 1.12rem; margin: 0 0 18px; }
+    p { line-height: 1.55; }
+    .lead { color: #52697c; margin: 0; max-width: 760px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 18px; align-items: start; }
+    .panel { background: #fff; border: 1px solid #d9e3ea; border-radius: 14px; padding: 23px; box-shadow: 0 3px 12px #19314a0a; }
+    .field { margin-bottom: 15px; }
+    label, legend { display: block; font-weight: 650; font-size: .88rem; margin-bottom: 6px; }
+    select, input[type="number"] { display: block; width: 100%; padding: 10px 12px; border: 1px solid #aebfcc; border-radius: 8px; background: white; color: inherit; font: inherit; }
+    select:focus-visible, input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #70d6cb; outline-offset: 2px; }
+    .hint { color: #5c7182; font-size: .78rem; margin: 5px 0 0; }
+    fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+    fieldset:disabled { opacity: .5; }
+    .foci { display: grid; gap: 10px; margin: 10px 0 16px; }
+    .foci label { display: flex; gap: 9px; align-items: center; font-weight: 500; margin: 0; }
+    .foci input { width: 17px; height: 17px; accent-color: #087f87; }
+    button { border: 0; background: #096d76; color: white; padding: 12px 16px; border-radius: 9px; font-weight: 700; font-size: .91rem; cursor: pointer; }
+    button:hover { background: #07585f; }
+    button.secondary { background: #eef5f7; color: #174d57; border: 1px solid #b7d1d7; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    .actions { display: flex; gap: 9px; flex-wrap: wrap; }
+    .note { background: #eff6f8; border-left: 3px solid #298b99; border-radius: 5px; color: #335566; padding: 11px 12px; font-size: .85rem; line-height: 1.5; margin: 0 0 18px; }
+    .warning { background: #fff7ed; border-left-color: #e0a03e; color: #61411b; }
+    .error { color: #8c2222; background: #ffebeb; border-radius: 8px; padding: 12px; margin: 12px 0 0; }
+    .results { margin-top: 14px; }
+    .score { display: flex; gap: 14px; align-items: center; border-bottom: 1px solid #e4ebef; padding: 4px 0 16px; margin-bottom: 16px; }
+    .category { font-size: 2.7rem; font-weight: 800; color: #086f79; line-height: 1; }
+    .points { font-weight: 700; }
+    .muted { color: #5b7080; font-size: .85rem; }
+    .management { font-weight: 730; font-size: 1.05rem; }
+    .breakdown { font-size: .82rem; line-height: 1.65; margin: 12px 0; text-transform: capitalize; }
+    .reference { margin-top: 22px; font-size: .81rem; color: #526b7a; line-height: 1.6; }
+    a { color: #075d79; }
+    [hidden] { display: none !important; }
+    @media(max-width: 740px) { .layout { grid-template-columns: 1fr; } main { padding: 19px 13px 40px; } .panel { padding: 18px; } }
+  </style>
+  <script defer src="./tirads.js"></script>
+  <script defer src="./app.js"></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Thyroid Ultrasound Ti Rads Engine</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+<main>
+  <header>
+    <div class="eyebrow">Clinical decision-support · Offline calculator</div>
+    <h1>ACR TI-RADS Nodule Calculator</h1>
+    <p class="lead">2017 ACR ultrasound feature scoring and maximum-diameter management thresholds for adult thyroid nodules. Manually enter findings from an ultrasound interpretation.</p>
+  </header>
+  <div class="layout">
+    <section class="panel" aria-labelledby="input-heading">
+      <h2 id="input-heading">Ultrasound characteristics</h2>
+      <p class="note warning">Educational/clinical reference tool only. Not diagnostic software, an ultrasound image classifier, or a substitute for individual clinical assessment. Do not enter patient identifiers.</p>
+      <form id="nodule-form">
+        <div class="field">
+          <label for="size">Maximum nodule diameter (cm)</label>
+          <input id="size" type="number" step="any" min="0.01" max="100" inputmode="decimal" required placeholder="e.g. 1.2">
+          <p class="hint">Use largest sonographic diameter, not mean diameter.</p>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
+        <div class="field">
+          <label for="composition">Composition</label>
+          <select id="composition" required>
+            <option value="" selected disabled>Select composition</option>
+            <option value="cystic">Cystic or almost completely cystic · 0</option>
+            <option value="spongiform">Spongiform · 0</option>
+            <option value="mixed">Mixed cystic and solid · 1</option>
+            <option value="solid">Solid or almost completely solid · 2</option>
+          </select>
         </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
+        <p class="hint" id="benign-help" hidden>Cystic or spongiform nodules score 0 (TR1); other feature categories are not scored.</p>
+        <fieldset id="scored-features">
+          <div class="field">
+            <label for="echogenicity">Echogenicity of solid component</label>
+            <select id="echogenicity" required>
+              <option value="" selected disabled>Select echogenicity</option>
+              <option value="isoechoic_hyperechoic">Isoechoic or hyperechoic · 1</option>
+              <option value="hypoechoic">Hypoechoic · 2</option>
+              <option value="very_hypoechoic">Very hypoechoic · 3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="shape">Shape</label>
+            <select id="shape" required>
+              <option value="" selected disabled>Select shape</option>
+              <option value="wider_than_tall">Wider-than-tall · 0</option>
+              <option value="taller_than_wide">Taller-than-wide · 3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="margin">Margins</label>
+            <select id="margin" required>
+              <option value="" selected disabled>Select margins</option>
+              <option value="smooth">Smooth · 0</option>
+              <option value="ill_defined">Ill-defined · 0</option>
+              <option value="lobulated_irregular">Lobulated or irregular · 2</option>
+              <option value="extrathyroidal_extension">Extrathyroidal extension · 3</option>
+            </select>
+          </div>
+          <fieldset>
+            <legend>Echogenic foci (select all that apply)</legend>
+            <div class="foci">
+              <label><input name="foci" type="checkbox" value="macrocalcifications"> Macrocalcifications · +1</label>
+              <label><input name="foci" type="checkbox" value="rim_calcifications"> Peripheral (rim) calcifications · +2</label>
+              <label><input name="foci" type="checkbox" value="punctate_foci"> Punctate echogenic foci · +3</label>
             </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
+            <p class="hint">Leave all unchecked for none or large comet-tail artifacts.</p>
+          </fieldset>
+        </fieldset>
+        <div class="actions">
+          <button type="submit">Calculate TI-RADS</button>
+          <button type="button" class="secondary" id="download" disabled>Download JSON result</button>
         </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Thyroid Ultrasound Ti Rads Engine Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "thyroid-ultrasound-ti-rads-engine",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <div class="error" id="error" role="alert" hidden></div>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="result-heading">
+      <h2 id="result-heading">Assessment</h2>
+      <p class="muted" id="start-hint">Enter ultrasound findings and select Calculate TI-RADS to display the point total, category, and size-based recommendation.</p>
+      <div class="results" id="result" aria-live="polite" hidden>
+        <div class="score"><div class="category" id="category"></div><div><div class="points" id="points"></div><div class="muted" id="suspicion"></div></div></div>
+        <p class="management" id="management"></p>
+        <p id="thresholds"></p>
+        <p class="muted" id="schedule"></p>
+        <div class="breakdown" id="breakdown"></div>
+      </div>
+      <p class="note">Results depend on accurate sonographic descriptors. Clinical risk factors, lymph nodes, symptoms, prior biopsy, and individual circumstances may change management. Size thresholds do not imply an emergency diagnosis.</p>
+      <p class="reference">Reference: Tessler FN et al. ACR TI-RADS Committee white paper, <em>J Am Coll Radiol</em>. 2017;14:587–595. <a href="https://doi.org/10.1016/j.jacr.2017.01.046" target="_blank" rel="noopener noreferrer">DOI 10.1016/j.jacr.2017.01.046</a>. Calculation happens entirely in your browser; no findings are sent to a server.</p>
+    </section>
+  </div>
+</main>
 </body>
 </html>

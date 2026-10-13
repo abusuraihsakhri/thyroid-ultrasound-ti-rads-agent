@@ -4,14 +4,15 @@ FastAPI REST API Server for ThyroidUltrasound Sentinel: ACR TI-RADS Multiparamet
 from typing import Dict, Any
 from .models import FrontierPayload
 from .agents import ThyroidUSCoordinator
+from .tirads import score_tirads
 
 coordinator = ThyroidUSCoordinator()
 
 
 def create_app():
     try:
-        from fastapi import FastAPI
-        from pydantic import BaseModel
+        from fastapi import FastAPI, HTTPException
+        from pydantic import BaseModel, Field
 
         app = FastAPI(
             title="ThyroidUltrasound Sentinel: ACR TI-RADS Multiparametric Feature Agent",
@@ -27,6 +28,14 @@ def create_app():
             status_descriptor: str = "DISCORDANT_ANOMALY"
             is_critical_flag: bool = True
             attributes: Dict[str, Any] = {}
+
+        class TIRADSRequest(BaseModel):
+            composition: str
+            size_cm: float = Field(gt=0, allow_inf_nan=False)
+            echogenicity: str | None = None
+            shape: str | None = None
+            margin: str | None = None
+            echogenic_foci: list[str] = Field(default_factory=list)
 
         class ChatRequest(BaseModel):
             query: str
@@ -47,6 +56,13 @@ def create_app():
                 attributes=req.attributes,
             )
             return coordinator.process(payload)
+
+        @app.post("/api/ti-rads")
+        def api_tirads(req: TIRADSRequest):
+            try:
+                return score_tirads(**req.model_dump())
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         @app.post("/api/chat")
         def api_chat(req: ChatRequest):
