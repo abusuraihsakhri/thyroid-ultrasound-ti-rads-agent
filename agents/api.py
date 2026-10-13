@@ -3,7 +3,8 @@ FastAPI REST API Server for Thyroid Ultrasound Ti Rads Agent.
 """
 from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from thyroid_tirads_ai.tirads import score_tirads
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
@@ -15,6 +16,15 @@ app = FastAPI(
     description="Enterprise Distributed Component Platform (Radiology & Neuroimaging Systems)",
     version="3.0.0-ENTERPRISE",
 )
+
+
+class TIRADSRequest(BaseModel):
+    composition: str
+    size_cm: float = Field(gt=0, allow_inf_nan=False)
+    echogenicity: str | None = None
+    shape: str | None = None
+    margin: str | None = None
+    echogenic_foci: List[str] = Field(default_factory=list)
 
 
 class ChatRequest(BaseModel):
@@ -48,6 +58,15 @@ def api_chat(req: ChatRequest):
         return {"response": ans}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/ti-rads")
+def api_tirads(req: TIRADSRequest):
+    """Score manually described adult thyroid nodules with ACR TI-RADS."""
+    try:
+        return score_tirads(**req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @app.get("/api/audit/logs")
