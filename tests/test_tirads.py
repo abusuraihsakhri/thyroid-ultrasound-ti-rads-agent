@@ -99,3 +99,35 @@ def test_tirads_cli(capsys):
     assert main(["tirads", "--composition", "cystic", "--size-cm", "3"]) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["category"] == "TR1"
+
+
+def test_legacy_api_rejects_sensitive_nested_metadata():
+    client = TestClient(app)
+    response = client.post("/api/audit", json={
+        "task_id": "TASK-NESTED",
+        "target_identifier": "CASE-001",
+        "primary_metric": 2,
+        "attributes": {"comment": "MRN-987654"}
+    })
+    assert response.status_code == 422
+    assert "Sensitive identifiers" in response.json()["detail"]
+
+
+def test_mock_chat_does_not_claim_clinical_validation():
+    response = TestClient(app).post("/api/chat", json={"query": "Is this diagnostic?"})
+    assert response.status_code == 200
+    assert "No clinical verification" in response.json()["response"]
+
+
+def test_cli_batch_false_flag_is_not_critical(tmp_path):
+    csv_in = tmp_path / "batch.csv"
+    csv_out = tmp_path / "out.csv"
+    csv_in.write_text(
+        "task_id,target_identifier,primary_metric,secondary_metric,is_critical_flag,status_descriptor\n"
+        "B1,TARGET-01,12,4,False,NOMINAL\n", encoding="utf-8"
+    )
+    assert main(["batch", "-i", str(csv_in), "-o", str(csv_out)]) == 0
+    import csv
+    with csv_out.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[0]["overall_urgency"] == "ROUTINE"
