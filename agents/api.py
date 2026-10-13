@@ -5,7 +5,7 @@ from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from thyroid_tirads_ai.tirads import score_tirads
-from .base import AuditLogger, PHIGuard
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -47,7 +47,10 @@ def metrics():
 
 @app.post("/api/audit")
 def api_audit(payload: SystemTaskPayload):
-    dossier = supervisor.process_task(payload)
+    try:
+        dossier = supervisor.process_task(payload)
+    except SecurityException:
+        raise HTTPException(status_code=422, detail="Sensitive identifiers detected in audit request")
     return dossier.to_dict()
 
 
@@ -56,8 +59,8 @@ def api_chat(req: ChatRequest):
     try:
         ans = supervisor.query_supervisory_chat(req.query)
         return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except SecurityException:
+        raise HTTPException(status_code=400, detail="Sensitive identifiers detected in chat request")
 
 
 @app.post("/api/ti-rads")
