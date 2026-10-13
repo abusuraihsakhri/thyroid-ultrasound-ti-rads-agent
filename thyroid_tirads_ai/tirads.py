@@ -63,7 +63,7 @@ def score_tirads(
         raise ValueError("size_cm must be a positive finite number")
     if not math.isfinite(size_cm) or size_cm <= 0:
         raise ValueError("size_cm must be a positive finite number")
-    if not isinstance(echogenic_foci, list):
+    if echogenic_foci is None:\n        echogenic_foci = []\n    if not isinstance(echogenic_foci, list):
         raise ValueError("echogenic_foci must be a list")
     if any(focus not in FOCI for focus in echogenic_foci):
         raise ValueError("Invalid echogenic focus")
